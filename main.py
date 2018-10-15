@@ -67,7 +67,10 @@ def layers(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes):
                                    kernel_size=1,
                                    strides=(1, 1),
                                    padding='same',
-                                   kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3)
+                                   kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3),
+                                   kernel_initializer=tf.contrib.layers.xavier_initializer(uniform=True,
+                                                                                           seed=None,
+                                                                                           dtype=tf.float32)
                                    )
     # Upsample the 1x1 convolution layer
     decoder_l1_out_deconv = tf.layers.conv2d_transpose(l7_conv_1x1,
@@ -75,7 +78,10 @@ def layers(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes):
                                                        strides=(2, 2),
                                                        kernel_size=4,
                                                        padding='same',
-                                                       kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3)
+                                                       kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3),
+                                                       kernel_initializer=tf.contrib.layers.xavier_initializer(uniform=True,
+                                                                                                       seed=None,
+                                                                                                       dtype=tf.float32)
                                                        )
     # do a 1x1 convolution on the 4th layer for a skip connection
     vgg_layer4_1x1 = tf.layers.conv2d(vgg_layer4_out,
@@ -83,7 +89,10 @@ def layers(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes):
                                       kernel_size=1,
                                       strides=(1, 1),
                                       padding='same',
-                                      kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3)
+                                      kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3),
+                                      kernel_initializer=tf.contrib.layers.xavier_initializer(uniform=True,
+                                                                                              seed=None,
+                                                                                              dtype=tf.float32)
                                       )
     decoder_l1_out = tf.add(decoder_l1_out_deconv, vgg_layer4_1x1)
 
@@ -93,7 +102,11 @@ def layers(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes):
                                                        strides=(2, 2),
                                                        kernel_size=4,
                                                        padding='same',
-                                                       kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3)
+                                                       kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3),
+                                                       kernel_initializer=tf.contrib.layers.xavier_initializer(
+                                                           uniform=True,
+                                                           seed=None,
+                                                           dtype=tf.float32)
                                                        )
     # do a 1x1 convolution on the 3rd layer for a skip connection
     vgg_layer3_1x1 = tf.layers.conv2d(vgg_layer3_out,
@@ -101,7 +114,10 @@ def layers(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes):
                                       kernel_size=1,
                                       strides=(1, 1),
                                       padding='same',
-                                      kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3)
+                                      kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3),
+                                      kernel_initializer=tf.contrib.layers.xavier_initializer(uniform=True,
+                                                                                              seed=None,
+                                                                                              dtype=tf.float32)
                                       )
     decoder_l2_out = tf.add(decoder_l2_out_deconv, vgg_layer3_1x1)
 
@@ -112,7 +128,10 @@ def layers(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes):
                                               kernel_size=16,
                                               strides=(8, 8),
                                               padding='same',
-                                              kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3)
+                                              kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3),
+                                              kernel_initializer=tf.contrib.layers.xavier_initializer(uniform=True,
+                                                                                                      seed=None,
+                                                                                                      dtype=tf.float32)
                                               )
     return output_layer
 
@@ -134,10 +153,13 @@ def optimize(nn_last_layer, correct_label, learning_rate, num_classes):
     true_label = tf.reshape(correct_label, (-1, num_classes))
 
     # define cross-entropy loss
+    # TODO: Double-check this!
+    # https://stackoverflow.com/questions/37107223/how-to-add-regularizations-in-tensorflow
     x_entropy_loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=logits,
-                                                                       labels=true_label,
-                                                                       )
-                               )
+                                                                            labels=true_label,
+                                                                            )
+                                    ) + tf.losses.get_regularization_loss()
+
     # Instantiate the Adam Optimizer
     optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
     optimizer_train = optimizer.minimize(x_entropy_loss)
@@ -176,7 +198,7 @@ def train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_l
                                  feed_dict={input_image: images,
                                             correct_label: label,
                                             keep_prob: 0.5,
-                                            learning_rate: 0.0012})
+                                            learning_rate: 0.00012})
             print("Loss: {loss}".format(loss=loss))
 
 
@@ -190,8 +212,8 @@ def run():
     runs_dir = './runs'
 
     # TODO: Tweak parameters!
-    epochs = 20 #6
-    batch_size = 25 #100
+    epochs = 22 #10
+    batch_size = 4 #6
 
     tests.test_for_kitti_dataset(data_dir)
 
