@@ -159,7 +159,7 @@ def optimize(nn_last_layer, correct_label, learning_rate, num_classes):
                                                                             labels=true_label,
                                                                             ))
     reg_losses = tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
-    x_entropy_loss += 0.01*tf.reduce_sum(reg_losses)
+    x_entropy_loss += 0.011*tf.reduce_sum(reg_losses)
 
     # Instantiate the Adam Optimizer
     optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
@@ -199,7 +199,7 @@ def train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_l
                                  feed_dict={input_image: images,
                                             correct_label: label,
                                             keep_prob: 0.5,
-                                            learning_rate: 0.00012})
+                                            learning_rate: 0.00011})
             print("Loss: {loss}".format(loss=loss))
 
 
@@ -213,7 +213,7 @@ def run():
     runs_dir = './runs'
 
     # TODO: Tweak parameters!
-    epochs = 22 #10
+    epochs = 30 #10
     batch_size = 4 #6
 
     tests.test_for_kitti_dataset(data_dir)
