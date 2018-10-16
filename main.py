@@ -157,8 +157,9 @@ def optimize(nn_last_layer, correct_label, learning_rate, num_classes):
     # https://stackoverflow.com/questions/37107223/how-to-add-regularizations-in-tensorflow
     x_entropy_loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=logits,
                                                                             labels=true_label,
-                                                                            )
-                                    ) + tf.losses.get_regularization_loss()
+                                                                            ))
+    reg_losses = tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
+    x_entropy_loss += 0.01*tf.reduce_sum(reg_losses)
 
     # Instantiate the Adam Optimizer
     optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
